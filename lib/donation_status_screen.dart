@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'donation_certificate_screen.dart';  // Import the certificate screen here
+import 'package:url_launcher/url_launcher.dart';
 
 class DonationStatusScreen extends StatelessWidget {
   const DonationStatusScreen({super.key});
@@ -95,14 +96,14 @@ class DonationStatusScreen extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    onPressed: () {
-                      // Navigate to DonationCertificateScreen when clicked
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DonationCertificateScreen(),
-                        ),
-                      );
+                    onPressed: () async {
+                      final lat = 0.0; // TODO: replace with real lat
+                      final lng = 0.0; // TODO: replace with real lng
+                      final query = Uri.encodeComponent('City General Hospital');
+                      final googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+                      if (await canLaunchUrl(googleMapsUrl)) {
+                        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+                      }
                     },
                     child: const Text(
                       'Get Directions',
@@ -125,7 +126,12 @@ class DonationStatusScreen extends StatelessWidget {
                       ),
                       side: const BorderSide(color: Colors.red, width: 1.5),
                     ),
-                    onPressed: () {},
+                    onPressed: () async {
+                      final telUri = Uri(scheme: 'tel', path: '+1800123456');
+                      if (await canLaunchUrl(telUri)) {
+                        await launchUrl(telUri);
+                      }
+                    },
                     icon: const Icon(
                       Icons.phone,
                       color: Colors.red,

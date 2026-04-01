@@ -1,8 +1,101 @@
 import 'package:flutter/material.dart';
 import 'donation_status_screen.dart'; // Import your Donation Status page
+import 'donation_confirmation_screen.dart';
 
-class RequestsListScreen extends StatelessWidget {
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'api_config.dart';
+
+
+class RequestsListScreen extends StatefulWidget {
   const RequestsListScreen({super.key});
+
+  @override
+  State<RequestsListScreen> createState() => _RequestsListScreenState();
+}
+
+class _RequestsListScreenState extends State<RequestsListScreen> {
+  List<dynamic> _bloodRequests = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBloodRequests();
+  }
+
+  Future<void> _fetchBloodRequests() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Get user's current location
+      Position position = await _determinePosition();
+      final latitude = position.latitude;
+      final longitude = position.longitude;
+
+      // Fetch stored JWT token
+      final prefs = await SharedPreferences.getInstance();
+      final jwtToken = prefs.getString('jwt_token');
+
+      // Replace with your backend API URL
+      final response = await http.get(Uri.parse('${ApiConfig.apiUrl}/requests/nearby?latitude=$latitude&longitude=$longitude&radius=50'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+        },
+      );
+
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _bloodRequests = json.decode(response.body);
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load blood requests: ${response.statusCode} ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error fetching blood requests: $e';
+      });
+      print('Error fetching blood requests: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,27 +132,37 @@ class RequestsListScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildConfirmedDonationCard(context), // Pass context here
+            _buildConfirmedDonationCard(context),
             const SizedBox(height: 16),
-            _buildRequestCard(
-              name: 'Sarah Johnson',
-              hospital: 'Mercy West Hospital',
-              bloodType: 'A+',
-              priority: 'CRITICAL',
-              timeAgo: 'Requested 4h ago',
-              unitsNeeded: '2 units needed',
-              priorityColor: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            _buildRequestCard(
-              name: 'Mark Chen',
-              hospital: 'Valley Medical Center',
-              bloodType: 'B-',
-              priority: 'URGENT',
-              timeAgo: 'Requested 1d ago',
-              unitsNeeded: '1 unit needed',
-              priorityColor: Colors.orange,
-            ),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(child: Text('Error: $_error'))
+                    : _bloodRequests.isEmpty
+                        ? const Center(child: Text('No nearby blood requests found.'))
+                        : Column(
+                            children: _bloodRequests.map((request) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: _buildRequestCard(
+                                  context,
+                                  name: request['requester'] != null
+                                      ? '${request['requester']['firstName']} ${request['requester']['lastName']}'
+                                      : (request['hospital'] != null ? request['hospital']['name'] : 'Unknown'),
+                                  hospital: request['hospital'] != null
+                                      ? request['hospital']['name']
+                                      : 'Unknown Hospital',
+                                  bloodType: request['bloodType'],
+                                  priority: request['urgency'],
+                                  timeAgo: 'Requested ${DateTime.now().difference(DateTime.parse(request['createdAt'])).inHours}h ago',
+                                  unitsNeeded: '${request['unitsRequired']} units needed',
+                                  priorityColor: request['urgency'] == 'CRITICAL'
+                                      ? Colors.red
+                                      : (request['urgency'] == 'URGENT' ? Colors.orange : Colors.blue),
+                                ),
+                              );
+                            }).toList(),
+                          ),
           ],
         ),
       ),
@@ -302,7 +405,7 @@ class RequestsListScreen extends StatelessWidget {
   }
 
   /// Request card for list of requests
-  Widget _buildRequestCard({
+  Widget _buildRequestCard(BuildContext context, {
     required String name,
     required String hospital,
     required String bloodType,
@@ -443,7 +546,14 @@ class RequestsListScreen extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DonationConfirmationScreen(),
+                      ),
+                    );
+                  },
                   child: const Text(
                     'Donate Now',
                     style: TextStyle(

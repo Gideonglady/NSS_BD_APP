@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  bloodType         BloodType
+  isDonor           Boolean     @default(false)
+  isRecipient       Boolean     @default(false)
+  latitude          Float?
+  longitude         Float?
+  contactNumber     String?
+  lastDonationDate  DateTime?
+  medicalHistory    String?
+  role              Role        @default(USER)
+  deviceToken       String? // For FCM notifications
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  bloodRequests     BloodRequest[] @relation("RequesterBloodRequests")
+  donationPledges   DonationPledge[] @relation("UserDonationPledges")
+}
+
+enum BloodType {
+  APOS
+  ANEG
+  BPOS
+  BNEG
+  ABPOS
+  ABNEG
+  OPOS
+  ONEG
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BloodRequestStatus {
+  PENDING
+  FULFILLED
+  CANCELLED
+}
+
+model Hospital {
+  id            String         @id @default(cuid())
+  name          String
+  address       String
+  latitude      Float
+  longitude     Float
+  contactInfo   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  bloodRequests BloodRequest[]
+}
+
+model BloodRequest {
+  id            String             @id @default(cuid())
+  hospitalId    String
+  hospital      Hospital           @relation(fields: [hospitalId], references: [id])
+  requesterId   String? // Make it optional for now, as requests can come from hospitals directly
+  requester     User?              @relation("RequesterBloodRequests", fields: [requesterId], references: [id])
+  bloodType     BloodType
+  unitsRequired Int
+  urgency       Urgency
+  latitude      Float
+  longitude     Float
+  status        BloodRequestStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  donationPledges DonationPledge[]
+}
+
+enum DonationPledgeStatus {
+  PENDING
+  EN_ROUTE
+  DONATED
+  CANCELLED
+}
+
+model DonationPledge {
+  id            String               @id @default(cuid())
+  bloodRequestId String
+  bloodRequest  BloodRequest         @relation(fields: [bloodRequestId], references: [id])
+  userId        String
+  user          User                 @relation("UserDonationPledges", fields: [userId], references: [id])
+  status        DonationPledgeStatus @default(PENDING)
+  pledgedAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}

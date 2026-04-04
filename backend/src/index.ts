@@ -1,8 +1,8 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { PrismaClient, BloodRequestStatus, DonationPledgeStatus, Role } from './generated/prisma/index.js';
-import type { User } from './generated/prisma/index.js';
+import { PrismaClient, BloodRequestStatus, DonationPledgeStatus, Role } from '../dist/generated/prisma/index.js';
+import type { User } from '../dist/generated/prisma/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
@@ -89,12 +89,18 @@ app.post(
   '/api/auth/register',
   [
     body('email').isEmail().withMessage('Invalid email address'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters long'),
     body('firstName').notEmpty().withMessage('First name is required'),
     body('lastName').notEmpty().withMessage('Last name is required'),
-    body('bloodType').isIn(['APOS', 'ANEG', 'BPOS', 'BNEG', 'ABPOS', 'ABNEG', 'OPOS', 'ONEG']).withMessage('Invalid blood type'),
-    body('isDonor').isBoolean().optional(),
-    body('isRecipient').isBoolean().optional(),
+    body('bloodType')
+      .isIn(['APOS', 'ANEG', 'BPOS', 'BNEG', 'ABPOS', 'ABNEG', 'OPOS', 'ONEG'])
+      .withMessage('Invalid blood type'),
+    body('isDonor').optional().isBoolean(),
+    body('isRecipient').optional().isBoolean(),
+    body('latitude').optional().isFloat(),
+    body('longitude').optional().isFloat(),
   ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -102,10 +108,25 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, firstName, lastName, bloodType, isDonor, isRecipient, latitude, longitude, contactNumber, medicalHistory } = req.body;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      bloodType,
+      isDonor,
+      isRecipient,
+      latitude,
+      longitude,
+      contactNumber,
+      medicalHistory,
+    } = req.body;
 
     try {
+      // 🔐 Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
+
+      // 🧠 Create user safely
       const user = await prisma.user.create({
         data: {
           email,
@@ -113,20 +134,44 @@ app.post(
           firstName,
           lastName,
           bloodType,
-          isDonor: isDonor || false,
-          isRecipient: isRecipient || false,
-          latitude,
-          longitude,
-          contactNumber,
-          medicalHistory,
+
+          // ✅ IMPORTANT: set default role
+          role: Role.USER,
+
+          // ✅ Safe booleans
+          isDonor: isDonor ?? false,
+          isRecipient: isRecipient ?? false,
+
+          // ✅ Safe optional fields
+          latitude: latitude ?? null,
+          longitude: longitude ?? null,
+          contactNumber: contactNumber ?? null,
+          medicalHistory: medicalHistory ?? null,
         },
       });
-      res.status(201).json({ message: 'User registered successfully', userId: user.id });
+
+      return res.status(201).json({
+        message: 'User registered successfully',
+        userId: user.id,
+      });
+
     } catch (error: any) {
+      // 🔥 FULL DEBUG LOG
+      console.error('🔥 REGISTER ERROR:', error);
+      console.error('MESSAGE:', error.message);
+      console.error('CODE:', error.code);
+      console.error('META:', error.meta);
+
+      // ⚠️ Duplicate email
       if (error.code === 'P2002') {
-        return res.status(409).json({ error: 'Email already registered' });
+        return res.status(409).json({
+          error: 'Email already registered',
+        });
       }
-      res.status(500).json({ error: 'Something went wrong' });
+
+      return res.status(500).json({
+        error: error.message || 'Something went wrong',
+      });
     }
   }
 );
@@ -150,6 +195,40 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ token, userId: user.id, role: user.role });
 });
 
+// Get all donors
+app.get('/api/users/donors', authenticateToken, async (_req: Request, res: Response) => {
+  const donors = await prisma.user.findMany({
+    where: { isDonor: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      bloodType: true,
+      latitude: true,
+      longitude: true,
+      contactNumber: true,
+      lastDonationDate: true,
+    },
+  });
+  res.json(donors);
+});
+
+// Get all recipients
+app.get('/api/users/recipients', authenticateToken, async (_req: Request, res: Response) => {
+  const recipients = await prisma.user.findMany({
+    where: { isRecipient: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      bloodType: true,
+      latitude: true,
+      longitude: true,
+      contactNumber: true,
+    },
+  });
+  res.json(recipients);
+});
 
 // Get User Profile
 app.get('/api/users/:id', authenticateToken, async (req: Request, res: Response) => {
@@ -242,41 +321,6 @@ app.delete('/api/users/:id', authenticateToken, async (req: Request, res: Respon
   } catch (error) {
     res.status(500).json({ error: 'Unable to delete user' });
   }
-});
-
-// Get all donors
-app.get('/api/users/donors', authenticateToken, async (_req: Request, res: Response) => {
-  const donors = await prisma.user.findMany({
-    where: { isDonor: true },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      bloodType: true,
-      latitude: true,
-      longitude: true,
-      contactNumber: true,
-      lastDonationDate: true,
-    },
-  });
-  res.json(donors);
-});
-
-// Get all recipients
-app.get('/api/users/recipients', authenticateToken, async (_req: Request, res: Response) => {
-  const recipients = await prisma.user.findMany({
-    where: { isRecipient: true },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      bloodType: true,
-      latitude: true,
-      longitude: true,
-      contactNumber: true,
-    },
-  });
-  res.json(recipients);
 });
 
 // Create a new blood request
@@ -723,7 +767,7 @@ app.post(
                 await admin.messaging().send(message);
                 console.log(`Notification sent to donor ${donor.id}`);
               } else {
-                 console.warn('Firebase not initialized, skipping notification.');
+                console.warn('Firebase not initialized, skipping notification.');
               }
             } catch (notificationError) {
               console.error(`Error sending notification to donor ${donor.id}:`, notificationError);

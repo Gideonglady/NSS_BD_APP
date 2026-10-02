@@ -129,3 +129,18 @@ F002 must replace previous Supabase/Hono/env/workspace declarations, pin pnpm
 reviewed feature-only baseline. Do not apply the Supabase drafts or use declared
 commands as acceptance evidence. Current product contracts and prerequisites are
 in plan.md, techspec.md and featurelist.json; this file documents host recovery.
+
+## Latest application toolchain verification — 2026-10-02
+
+The owner resumed implementation and requested parallel subagents. Fresh host-access
+Docker probes reached engine29.7.2. The new digest-pinned Compose PostgreSQL17/PostGIS
+service started healthy; SQL confirmed PostgreSQL17.5/PostGIS3.5. Both workspace and
+clean-clone start/stop/start probes passed and preserved the project-local volume.
+Containers/network were stopped after verification. No new Desktop restart or
+quarantine recovery was attempted; ordinary Desktop startup reliability remains
+unresolved. Earlier pause/runner-not-implemented statements above are historical.
+
+F002 now provides real local Compose runners and scaffold checks. Migration,
+seed and permission tests remain F003/F004 prerequisites. The F002 remote baseline
+push was rejected by automatic approval review pending explicit authorization for
+the configured GitHub destination; current details are in progress.md.

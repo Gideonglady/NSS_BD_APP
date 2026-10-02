@@ -64,14 +64,14 @@ while `package.json` declares 10.32.1; `pnpm-lock.yaml`, the backend runner,
 synthetic seed, secret checker, application packages and test suites are absent.
 These historical gaps are being resolved under F002: pinned Corepack pnpm works,
 registry installation generated the lockfile and cumulative scaffold checks pass.
-Clean-checkout acceptance is recorded below when verified.
+Clean-checkout frozen installs, cumulative checks and Compose lifecycle pass.
 
-**Next work:** Complete `F002`: align workspace/dependencies/env/scripts with
-Express/Next.js, Compose PostgreSQL/PostGIS and Flutter SDK/pub; prove local
-start/stop and clean-checkout checks. Under `F003`, port the unapplied Supabase
-SQL into Prisma migrations, replacing identity, grants and queue assumptions;
-then verify the private workflow model for `F004`. Record command output and
-access-test results before changing their status to done.
+**Next work:** Obtain explicit authorization to push the verified
+`codex/f002-toolchain` baseline to the configured GitHub origin; automatic approval
+review rejected this export because destination trust/authorization was unverified.
+F002 remains in progress until its remote-baseline gate passes. Then select F003
+identity/organization Prisma foundation; F004 owns donor/request schema. Unrelated
+working-tree deletions remain preserved and unstaged.
 
 ## Open release gates
 
@@ -365,3 +365,45 @@ the commit or PR link here.
   documented), no mobile device, iOS requires macOS. Desktop startup defect remains
   documented; no host configuration changes. F002 remains in progress until the
   baseline/clean-checkout requirement is verified.
+
+### 2026-10-02 — F002 clean-checkout verification; remote baseline blocked
+
+- **Baseline:** Commit 8086470 contains reviewed F002 scaffolds and governing
+  documentation. Follow-up 9dfe9aa excludes generated TypeScript build cache.
+  Explicit-path staging preserved unrelated legacy deletions. The clone under
+  .cache/f002-clean uses committed files, not the working tree.
+- **Clean evidence:** Frozen pnpm install and enforced offline Flutter/pub lockfile
+  install pass. The clean-clone pnpm check passes: active credential-pattern scan,
+  backend/web typechecks, 3 reset/provider/foundation guard tests, 12 backend tests,
+  Next production build, Flutter analysis and 2 widget tests. Backend build passes.
+  Node/pub lockfiles remain unchanged. Next warns about the outer nested workspace;
+  its build completes. The only clone tracked change is generated tsbuildinfo,
+  excluded by the follow-up commit; no source/dependency drift.
+- **Lifecycle:** Clean-clone backend:down/up/down passes; PostgreSQL/PostGIS becomes
+  healthy and the project data volume is preserved. Docker services and browser
+  verification server are stopped. Original-workspace API and web runtime checks
+  passed as recorded above; clean API observation is recorded in the next entry.
+- **Failure evidence:** Remote database URL reset is rejected before any mutation;
+  local reset/types/integration commands reject absent F003 schema/seed; FCM-enabled
+  startup rejects missing fields without values. These failures are intentional
+  prerequisite checks, not claims of database migrations or provider delivery.
+- **Blocked push:** Automatic approval review rejected git push to
+  https://github.com/Gideonglady/NSS_BD_APP.git, explaining that repository export
+  could contain sensitive contents and destination trust/authorization was not
+  verified. No alternative upload, retry or bypass was attempted. Obtain explicit
+  owner authorization for this exact branch/destination before pushing.
+- **Status/next:** F002 remains in_progress with partial evidence. F003 and all
+  consumers remain not_started, respecting dependency gates. Once remote baseline
+  acceptance passes, complete F002 and select F003 identity/organization foundation.
+  Native builds/devices, production credentials/policies, history credential
+  revocation, permissions/workflows and ordinary Desktop restart remain unverified.
+
+### 2026-10-02 — F002 clean API startup and shutdown observed
+
+- Clean clone dev:all started API on127.0.0.1:49178 and the idle worker.
+  /health/live returned200; /health/ready returned503 with database not_implemented.
+  Ctrl+C logged both stopping events, closed the listener and left no backend
+  source-process descendants. No clone edits or commits were made by this probe.
+- Local implementation and clean acceptance checks are verified. Remote-baseline
+  publication remains the sole outstanding F002 acceptance gate; automatic review
+  requires explicit destination/export authorization. No dependent feature started.

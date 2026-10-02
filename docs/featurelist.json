@@ -52,7 +52,16 @@
         "Pin pnpm 10.32.1 and Node 24; replace old Supabase/Hono dependencies, apps/* workspace/env/typecheck paths and TypeScript-mobile scripts with backend/admin/packages and Flutter SDK commands.",
         "Implement actual runner/secret checks, Compose health/start/stop/local reset and lockfiles; record Docker/registry failures as blockers. Explicit-path reviewed baseline excludes unrelated legacy deletions and reproduces in a clean checkout."
       ],
-      "evidence": [],
+      "evidence": [
+        "docs/LOCAL-DEVELOPMENT.md",
+        "docs/progress.md: 2026-10-02 F002 parallel toolchain implementation and clean-checkout verification (partial; remote baseline push blocked)",
+        "pnpm-lock.yaml",
+        "mobile/pubspec.lock",
+        "compose.yaml",
+        "tests/toolchain/guards.test.mjs",
+        "backend/test/health.test.ts",
+        "mobile/test/widget_test.dart"
+      ],
       "tags": []
     },
     {

@@ -210,8 +210,9 @@ Requirements:
 | `flutter analyze`, `flutter test` (in `mobile/`) | Dart analysis and unit/widget checks; device integration tests separately. |
 
 CI must reconstruct the database and run Node/web and Flutter checks from a
-clean checkout. See [progress.md](progress.md) for which commands/services are
-implemented. Current command declarations have not been migrated or validated.
+clean checkout. CI remains unimplemented. F002 commands now run scaffold checks
+and local Compose; schema-dependent commands reject missing F003/F010 prerequisites.
+See [progress.md](progress.md) for exact implementation and acceptance evidence.
 
 ## 3. Product, data, and API specification
 

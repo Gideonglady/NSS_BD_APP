@@ -1,5 +1,33 @@
 {
-  "dependencies": {
-    "node-fetch": "^3.3.2"
+  "name": "nss-blood-donor",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": "10.32.1"
+  },
+  "scripts": {
+    "docker:up": "pwsh -NoProfile -File scripts/docker-up.ps1",
+    "backend:up": "node scripts/backend.mjs up",
+    "backend:dev": "node scripts/backend.mjs serve",
+    "backend:down": "node scripts/backend.mjs down",
+    "db:reset:local": "node scripts/backend.mjs reset",
+    "db:types": "node scripts/backend.mjs types",
+    "test:backend": "node scripts/backend.mjs test",
+    "dev:web": "corepack pnpm --filter @nss/web dev",
+    "dev:mobile": "node scripts/mobile.mjs run",
+    "build:web": "corepack pnpm --filter @nss/web build",
+    "typecheck": "corepack pnpm --filter @nss/backend typecheck && corepack pnpm --filter @nss/web typecheck",
+    "test": "node --test tests/toolchain/*.test.mjs && corepack pnpm --filter @nss/backend test",
+    "test:mobile": "node scripts/mobile.mjs test",
+    "analyze:mobile": "node scripts/mobile.mjs analyze",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check": "corepack pnpm check:secrets && corepack pnpm typecheck && corepack pnpm test && corepack pnpm build:web && corepack pnpm analyze:mobile && corepack pnpm test:mobile"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
   }
 }

@@ -1,0 +1,25 @@
+name: nss_blood_donor
+description: NSS blood donor coordination mobile scaffold.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.5.4 <3.6.0'
+  flutter: '>=3.24.5 <3.25.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: 2.6.1
+  dio: 5.9.2
+  go_router: 14.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 4.0.0
+
+flutter:
+  uses-material-design: true

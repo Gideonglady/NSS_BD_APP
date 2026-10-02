@@ -1,0 +1,975 @@
+{
+  "schemaVersion": 1,
+  "project": "NSS Blood Donor",
+  "sourceOfTruth": "docs/plan.md",
+  "progressLog": "docs/progress.md",
+  "scope": "Registered-donor coordination with normal 10/25/50 km then all-coverage alerts, immediate emergency broadcast, donor slots/waiting replacements, private coordinator checks and compressed hospital-proof uploads; private admin-visible checkbox responses and dialler-based validation; no blood-stock or hospital medical-record functionality.",
+  "workflow": {
+    "execution": "Work on any feature whose dependsOn entries are done. Order is a suggested roadmap, not a blocking chain. Independent ready features may proceed in parallel.",
+    "allowedStatuses": [
+      "not_started",
+      "in_progress",
+      "blocked",
+      "done"
+    ],
+    "projectCompleteWhen": "All 45 features are done and final handoff is accepted.",
+    "activeFeatureIds": [
+      "F002"
+    ],
+    "parallelTagMeaning": "A feature tagged parallel does not depend on the immediately preceding feature; it may start alongside other ready features once all listed prerequisites are done."
+  },
+  "features": [
+    {
+      "id": "F001",
+      "order": 1,
+      "stage": "foundation",
+      "title": "Project plan and scope",
+      "dependsOn": [],
+      "status": "done",
+      "acceptanceCriteria": [
+        "Plan covers architecture, roles, pilot boundaries, two-stage checking, delivery stages, and completion gates.",
+        "Blood-stock functionality is explicitly excluded."
+      ],
+      "evidence": [
+        "docs/plan.md"
+      ],
+      "tags": []
+    },
+    {
+      "id": "F002",
+      "order": 2,
+      "stage": "foundation",
+      "title": "Local development toolchain",
+      "dependsOn": [
+        "F001"
+      ],
+      "status": "in_progress",
+      "acceptanceCriteria": [
+        "Clean checkout installs pinned dependencies and starts/stops local services through documented commands.",
+        "Commands fail clearly for missing prerequisites and never reset a remote database.",
+        "Node/web pnpm workspaces, pinned Flutter/Dart SDK with pub lockfile, Docker Compose PostgreSQL/PostGIS, Express/worker, Next.js and Flutter command wrappers replace previous-stack declarations; missing packages fail clearly.",
+        "Documented local startup and clean-checkout checks include Prisma tooling, TypeScript checks, flutter analyze and Flutter tests; no TypeScript mobile workspace or Supabase runtime is required.",
+        "Pin pnpm 10.32.1 and Node 24; replace old Supabase/Hono dependencies, apps/* workspace/env/typecheck paths and TypeScript-mobile scripts with backend/admin/packages and Flutter SDK commands.",
+        "Implement actual runner/secret checks, Compose health/start/stop/local reset and lockfiles; record Docker/registry failures as blockers. Explicit-path reviewed baseline excludes unrelated legacy deletions and reproduces in a clean checkout."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F003",
+      "order": 3,
+      "stage": "foundation",
+      "title": "Database foundation",
+      "dependsOn": [
+        "F002"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "PostgreSQL 17, PostGIS, extensions, migrations, indexes, and grants apply from an empty local database.",
+        "A clean reset reproduces the schema and synthetic seeds.",
+        "Prisma schema, PostgreSQL adapter, migrations and synthetic seed are the single database deployment path; reviewed SQL preserves spatial indexes, workflow functions, constraints and least-privilege grants/RLS.",
+        "Previous supabase migration drafts are ported and tested without Supabase Auth roles/auth.uid/JWT or PGMQ/Cron dependencies; backend identity/session tables and durable outbox/job tables reconstruct from an empty database.",
+        "Foundation scope is backend identity/session and organization/membership infrastructure; F004 owns donor/request workflow tables. New schemas/seeds use canonical urgency rather than old SQL values."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F004",
+      "order": 4,
+      "stage": "foundation",
+      "title": "Private workflow data model",
+      "dependsOn": [
+        "F003"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Requests, pledges, initial checks, hospital outcomes, certificates, audit, idempotency, and jobs have tested constraints.",
+        "Only approved bounded preliminary questionnaire responses are stored privately; no weights, diagnoses, detailed histories or test values. Private donor/assigned-staff access and redaction are tested.",
+        "Versioned coverage, urgency response/contact/offer windows, v1 outstanding-unit slot target and confirmed-coverage policy, search/evaluation state, expansion audit and unique original invitations have tested constraints.",
+        "Slot reservations, waiting pledges, expiring replacement offers, questionnaire versions/private responses/sharing consent and proof-upload states have concurrency/uniqueness constraints; responses never appear in public/requester/notification views.",
+        "Request origin REQUESTER/STAFF separates creator, requesting contact and coordinator; urgency is NORMAL/URGENT/CRITICAL/EMERGENCY, with typed API/client parity.",
+        "Contact versions/validation, independent hospital hold flag, paused coordination deadlines and consent-withdrawal slot release follow plan transition contracts."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F005",
+      "order": 5,
+      "stage": "foundation",
+      "title": "Organization and staff authorization",
+      "dependsOn": [
+        "F003"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Verified hospitals, NSS partnerships, memberships, and MFA scope every staff action.",
+        "Unassigned, revoked, non-MFA, and self-verifying donors are denied at API and database boundaries.",
+        "Trusted backend actor/MFA context and least-privilege database roles prevent callers from choosing another identity or bypassing scoped SQL/RLS.",
+        "Either authorized hospital staff or NSS coordinator may publish assigned requests without a mandatory second publisher; assigned admins can create/edit/activate questionnaire versions under hospital-approved policy with audit."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F006",
+      "order": 6,
+      "stage": "foundation",
+      "title": "Authentication and account lifecycle",
+      "dependsOn": [
+        "F003"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Verified email/password, Google, iOS Apple sign-in, recovery, refresh, logout, and disable work.",
+        "Staff TOTP and sensitive-change reauthentication pass integration tests.",
+        "Email/password registration and supported provider sign-in create or resume one account/profile; verification and repeat registration cannot bypass activation or duplicate profiles.",
+        "Express-owned identity uses bcrypt hashes, expiring single-use verification/reset tokens, short-lived JWT access and hashed rotating refresh sessions; replay, logout, disable and linked provider ownership checks pass.",
+        "Backend auth API and session/provider tests run without requiring later Flutter/web clients; F008 owns browser session transport and F009 owns mobile credential/refresh integration."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F007",
+      "order": 7,
+      "stage": "foundation",
+      "title": "API foundation and contracts",
+      "dependsOn": [
+        "F002",
+        "F003",
+        "F006"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Versioned Node.js/Express/TypeScript API uses router/schema/service modules, Zod validation, OpenAPI, TypeScript/Dart contracts, health and consistent errors.",
+        "Invalid input, expired sessions, and internal-error redaction are tested."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F008",
+      "order": 8,
+      "stage": "foundation",
+      "title": "Next.js browser session integration",
+      "dependsOn": [
+        "F006",
+        "F007"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Secure HTTP-only cookies, CSRF/origin checks, refresh, and logout work.",
+        "Tokens are not exposed to browser JavaScript and cross-origin tests pass.",
+        "Next.js server runtime on Vercel proxies authenticated Express calls using server-held credentials; Axios/browser flows use protected same-origin session routes without storing backend tokens in Zustand or browser storage."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F009",
+      "order": 9,
+      "stage": "foundation",
+      "title": "Web and Flutter client foundations",
+      "dependsOn": [
+        "F002",
+        "F006",
+        "F007"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "OpenAPI schemas, language keys/copy and design tokens serve TypeScript web and Dart mobile through platform-specific clients/forms; generated models and locale parity checks prevent drift.",
+        "Offline/retry behavior never reports an unconfirmed mutation as successful.",
+        "Flutter uses feature-based screens/providers/repositories, Riverpod, Dio, GoRouter, secure storage and localization/ARB; Next.js uses TanStack Query, Zustand, Axios and i18next.",
+        "Flutter unit/widget tests and web tests verify shared API/locale contracts without assuming Dart imports TypeScript or React components.",
+        "Flutter secure storage/Dio refresh and typed generated models integrate with completed backend identity; web tokens remain confined to F008 server session routes."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F010",
+      "order": 10,
+      "stage": "requests",
+      "title": "Verified hospital directory",
+      "dependsOn": [
+        "F005",
+        "F007"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Administrators verify hospitals and publish safe contact, location, and staffed-hour details.",
+        "Only verified, non-held hospitals can accept new requests."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F011",
+      "order": 11,
+      "stage": "requests",
+      "title": "Request submission",
+      "dependsOn": [
+        "F006",
+        "F007",
+        "F010",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Requester can select an actual hospital and draft, submit, edit, cancel, or correct a request.",
+        "Private references and requester contacts never appear in public discovery.",
+        "Ordinary drafts derive REQUESTER origin; scoped staff may create STAFF organizational drafts with private reachable requesting contact and separate creator/coordinator. Origin records provenance, not an extra publisher requirement."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F012",
+      "order": 12,
+      "stage": "requests",
+      "title": "Request moderation and state machine",
+      "dependsOn": [
+        "F005",
+        "F011",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Scoped staff can return, reject, publish, renew, fulfill, cancel, and expire due requests with reasons and audits.",
+        "Concurrent publication creates one public event; stale versions are rejected.",
+        "Publication requires approved coverage/response/contact/offer/slot policy, verified non-held hospital and reachable coordinator; closure/expiry stop coordination while a hospital hold preserves commitments and suspends pending timers.",
+        "Audited quantity/deadline/urgency edits reconcile slots, travelling donors and queued alerts; outside-app fulfillment, hold/release and corrected-outcome reopening resolve commitments safely.",
+        "Either authorized hospital staff or NSS coordinator can publish ready assigned REQUESTER or STAFF requests, including their creation; no mandatory second publisher. Scope/MFA/audit gates apply to both.",
+        "Only hospital staff set/release holds; preserve commitments/attendance, pause pending coordination timers, enforce effective request expiry and reschedule fresh work after release. Closed/held requests allow evidenced existing-visit reconciliation without new travel.",
+        "Only evidenced correction may reopen FULFILLED with fresh policy/deadline; other terminal requests require replacement. NORMAL/URGENT expand gradually and CRITICAL/EMERGENCY immediately use all coverage.",
+        "Assigned donation verification atomically fulfills/closes the request when required hospital-verified units are met, resolves surplus commitments and queues donor/requesting-person notifications plus dashboard updates."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F013",
+      "order": 13,
+      "stage": "requests",
+      "title": "Ownership, staffed hours, and escalation",
+      "dependsOn": [
+        "F005",
+        "F012"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Each submitted request has an owner, acknowledgement, backup, and partner-specific hours.",
+        "Overdue work escalates and outside-hours UI shows direct hospital contact."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F014",
+      "order": 14,
+      "stage": "requests",
+      "title": "Nearby request discovery",
+      "dependsOn": [
+        "F010",
+        "F012"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "PostGIS search filters open verified requests by distance, group, urgency, and hospital.",
+        "Queries use bounded cursor pagination and manual-locality fallback.",
+        "Discovery defaults to 25 km with 10/25/50 km choices, independently of hospital-centred progressive alert zones."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F015",
+      "order": 15,
+      "stage": "requests",
+      "title": "Requester-safe timeline",
+      "dependsOn": [
+        "F011",
+        "F012",
+        "F013"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Requester sees submission, acknowledgement, review, publication, coordination, and closure milestones.",
+        "No donor identity, check outcome, or hospital assessment appears.",
+        "Wider-area search and exhausted-search handoff appear only as neutral milestones, without donor identities, locations or check outcomes.",
+        "Requester timeline distinguishes confirmed donor coverage, shortfalls, donation verification pending and hospital-verified partial/complete units; coverage alone never claims fulfillment or tells the requester to abandon hospital advice.",
+        "Guarded admin notify-ready action tells the requesting person that required donors are confirmed/ready and extra donor searching can pause, with donation pending; later shortfalls notify them again."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F016",
+      "order": 16,
+      "stage": "donor_workflow",
+      "title": "Donor registration, profile and consent",
+      "dependsOn": [
+        "F006",
+        "F007",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Adult profile, group, locality, availability, contact/push consent, and alert pause work.",
+        "Withdrawal stops future matching/contact and stale preferences require reconfirmation.",
+        "Web/mobile onboarding records adult participation confirmation, name, self-reported group, Tamil/English preference, coarse locality, private callable E.164 number, availability and purpose-specific alert/contact consent, without collecting health answers at registration or test results.",
+        "Server activation gates block incomplete/unverified registration from matching and pledging; onboarding resumes idempotently without duplicate profiles or consent events and does not grant staff privileges.",
+        "Manual locality works with foreground location denied; denied OS push permission preserves registration and inbox access, separately from alert consent.",
+        "A valid private E.164 callable contactNumber is required for activation/pledging; numbers may be shared and remain self-reported until a coordinator call validates the contact version. Phone OTP/login identity remains F043.",
+        "Contact-sharing withdrawal immediately revokes number access, ends pre-donation commitments/releases slots and schedules neutral replacement work; manual handoff cannot delay it.",
+        "Alert withdrawal cancels waiting/offered commitments and donor push/matching; accepted commitments may continue with contact consent and inbox. OS push denial/availability pause alone does not cancel pledges."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F017",
+      "order": 17,
+      "stage": "donor_workflow",
+      "title": "Zone matching and all-coverage emergency alerts",
+      "dependsOn": [
+        "F014",
+        "F016",
+        "F013",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Normal matching uses hospital-centred 10 km, additional >10-25 km, >25-50 km then all enabled Tamil Nadu service coverage; critical/emergency publication or upgrade immediately contacts all matching coverage.",
+        "Every stage respects group, activation, availability, consent, freshness and contact limits; no background movement tracking, nationwide broadcast or emergency consent override.",
+        "Empty stages advance immediately; approved urgency windows evaluate outstanding confirmed coverage. Full pending slots/offers pause only until bounded contact deadlines; waiting donors do not count as confirmed or donated units.",
+        "Shortfalls prioritize waiting replacements before wider invitations. Policy/coverage snapshots, search stage, due times and pause/exhaustion reasons persist; concurrent evaluation/retry/locality changes never repeat donor/request invitations.",
+        "Rejection suppresses repeat invitations; voluntary donor reopening remains possible while open. Closed/expired/fulfilled/held requests suppress queued actions; exhaustion notifies coordinator/backup with requester-safe manual handoff."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F018",
+      "order": 18,
+      "stage": "donor_workflow",
+      "title": "Pledge slots, waiting list and replacements",
+      "dependsOn": [
+        "F012",
+        "F016",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Donor can pledge/cancel; staff can coordinate and record no-show; only one active pledge exists.",
+        "Retries are idempotent and a pledge never counts as a completed donation.",
+        "Concurrent acceptance reserves only available slots and waitlists surplus by acceptance time then pledge ID; repeated taps/retries and competing coordinators cannot overbook.",
+        "Waiting/offered pledges count toward one active commitment. Withdrawal, contact timeout, decline, no-show and non-donation release capacity; promote one donor per vacant slot with a time-limited fresh response and coordinator check.",
+        "Contact/offer deadlines and replacement transitions are durable, versioned and idempotent; no waiting/offered donor gets travel instructions. Closure and quantity changes resolve affected commitments.",
+        "Hold suspends pending contact/offer timers without releasing slots; release rechecks permissions and reschedules fresh deadlines. Rejected/expired replacement ends that waiting commitment; renewed voluntary acceptance joins with a new queue time.",
+        "V1 slot capacity is max(0, requested units minus verified units); surplus donors wait rather than adding travel slots. Policy duration/freshness/contact-limit bounds and effective expiry caps follow plan.md.",
+        "Fresh replacement response reconfirms the pinned questionnaire and sharing consent before admin validation; waitlisted donors retain private submitted answers and receive waiting notices."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F019",
+      "order": 19,
+      "stage": "donor_workflow",
+      "title": "Donor checkbox questionnaire and admin validation call",
+      "dependsOn": [
+        "F004",
+        "F005",
+        "F018"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "After Accept, donor completes five default editable Yes/No/Unsure checkbox questions and explicit response-sharing consent; no preselected answers. Submission atomically creates reserved/waiting pledge and private versioned responses.",
+        "Assigned admins receive donor contact/details and submitted responses for validation; cross-donor/unassigned/public/requester reads and forged question versions are denied.",
+        "Authorized assigned hospital/NSS admins create/modify/activate immutable Tamil/English question versions under hospital-approved policy. Requests pin publication versions; existing answers remain unchanged.",
+        "Admin Call opens phone dialler as selected by owner; missing dialler handler provides clear phone-number fallback. Contact result, decision, reviewer/time/version are recorded; no call recording.",
+        "Successful call/contact-version validation plus proceed and live reservation are required for CONFIRMED; uncertain answers require hospital advice. Failed/unanswered calls time out neutrally; checkbox responses never declare clinical eligibility.",
+        "Changed phone invalidates old validation: pre-travel confirmation returns to pending check; attendance state remains while en-route/arrived donors are reconciled.",
+        "Approved private response storage/access/retention is tested; answers never enter push, broad socket events, requester/public views, analytics/logs/crash reports. Full hospital clinical screening remains separate."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F020",
+      "order": 20,
+      "stage": "donor_workflow",
+      "title": "Travel and arrival",
+      "dependsOn": [
+        "F019"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Travel instructions require a proceed decision and donor may record en-route or arrival.",
+        "Offline retries, stale requests, and unsafe transitions cannot fabricate progress.",
+        "Cancellation, no-show, failed hospital visit and stale travel instructions notify staff and trigger safe replacement; holds/closure contact existing travellers and prevent further travel instructions."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F021",
+      "order": 21,
+      "stage": "donor_workflow",
+      "title": "Hospital final outcome",
+      "dependsOn": [
+        "F005",
+        "F020"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Either assigned partner role records donated, deferred, or did-not-donate with hospital proof.",
+        "Hospital controls clinical decision; duplicate, conflicting, or self-recorded outcomes are rejected.",
+        "Verified units alone count toward fulfillment; confirmed slots, pending proof and actual donated quantity are separate. No upload alone creates a donation.",
+        "Hospital non-donation releases capacity and notifies staff/replacement without clinical reasons; missing proof alone requires reconciliation rather than automatic replacement. Corrections/disputes and partial units remain auditable.",
+        "Verified donation atomically ends its commitment and reduces outstanding units/slot target before releasing capacity; it cannot promote an unnecessary replacement. Failure reasons are neutral operational codes without health free text.",
+        "Assigned hospital staff or NSS coordinator/admin validates donor-uploaded hospital certificate/evidence; verification reaching required units atomically closes and notifies affected donors/requesting person."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F022",
+      "order": 22,
+      "stage": "donor_workflow",
+      "title": "Private donation proof, verified history and certificates",
+      "dependsOn": [
+        "F021"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Only evidenced donations create private history and optional shareable certificate.",
+        "Deferral/no-show creates none; revocation invalidates verification links.",
+        "Authorized donor presign, direct private R2 upload and idempotent completion follow the Xerox guide; default one readable JPEG/PNG/PDF per pledge, max 2 MiB after compression and five-minute grants.",
+        "Server verifies actual size/type/content, strips image metadata, quarantines suspicious files and flags reused proof for review. Cross-donor/unassigned access and public URLs are denied; receipt reference/named hospital attestation remains available.",
+        "Interrupted uploads retry safely; unfinalized objects clean up after 24 hours. Approved retention, private evidence backups and restoration preserve access; no medical reports are accepted."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F023",
+      "order": 23,
+      "stage": "donor_workflow",
+      "title": "Notification queue and worker",
+      "dependsOn": [
+        "F003",
+        "F007",
+        "F017",
+        "F018",
+        "F004"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Inbox persists before push; FCM/APNs jobs retry, deduplicate, and expose failures.",
+        "Worker/provider outages do not lose committed events or send stale alerts.",
+        "Publication atomically queues normal Zone 1 or immediate all-coverage emergency matching; durable evaluation supports normal all-coverage fallback and bounded pending-slot pauses against confirmed coverage.",
+        "Crash/retry/concurrent evaluation preserves one stage event and one original invitation per donor/request; replacement offers have distinct deduplicated keys and device deliveries; state/consent/freshness/contact limits are rechecked before send.",
+        "Timed/empty-stage shortfalls, emergency upgrade, waiting promotion, contact/offer deadlines, exhausted handoff and closure/expiry/hold suppression pass integration tests; policy waiting is separate from processing latency.",
+        "PostgreSQL transactional outbox/job tables and a separate Node worker support leasing, due-time scheduling, retry/backoff and dead-letter visibility; API commits never depend on FCM/Socket.IO success.",
+        "Hold timer suspension/release, effective expiry and consent-withdrawal transactions survive restart without duplicate offers or stale calls/travel; withdrawal removes access before queued replacement work."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F024",
+      "order": 24,
+      "stage": "donor_workflow",
+      "title": "Device registration and inbox",
+      "dependsOn": [
+        "F006",
+        "F023"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Multiple devices, token rotation, logout cleanup, foreground display, and deep links work.",
+        "Denied push leaves usable inbox; deferral and requester notices reveal no health details.",
+        "Foreground accept/reject and background notification-tap journeys fetch live state; stale closure/offer notices cannot create acceptance or travel. Waiting, replacement and closure notices remain usable without push."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F025",
+      "order": 25,
+      "stage": "clients",
+      "title": "Public website",
+      "dependsOn": [
+        "F009",
+        "F010"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Purpose, verified directory, operating hours, help and privacy pages deploy with the Next.js App Router on Vercel; authenticated journeys use its server runtime.",
+        "Tamil/English responsive pages contain no embedded private data."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F026",
+      "order": 26,
+      "stage": "clients",
+      "title": "Requester and donor web journeys",
+      "dependsOn": [
+        "F008",
+        "F009",
+        "F011",
+        "F014",
+        "F015",
+        "F018",
+        "F022",
+        "F024",
+        "F017"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Web account, request, discovery, pledge, timeline, outcome, and history use real API data.",
+        "Browser tests pass at phone/desktop sizes and cover loading, empty, error, offline states.",
+        "Tamil/English donor registration can resume, validate completion, use manual locality and continue with push denied; requester timeline shows safe wider-search/exhaustion milestones.",
+        "Next.js App Router, TanStack Query, Axios and HTTP-only server sessions connect to Express; generated TypeScript models and i18next copy match Flutter/OpenAPI contracts.",
+        "Web journeys cover accept/reject, waiting/replacement response, checkbox questionnaire with private admin-visible responses and compressed proof upload/verification-pending; requester distinguishes coordinated versus fulfilled units."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F027",
+      "order": 27,
+      "stage": "clients",
+      "title": "Staff dashboard",
+      "dependsOn": [
+        "F008",
+        "F009",
+        "F012",
+        "F013",
+        "F019",
+        "F021",
+        "F017",
+        "F023",
+        "F022"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Scoped queues, assignment, basic check, outcome, evidence, audit, and administration work.",
+        "Both partner roles complete permitted journeys without direct database access.",
+        "Assigned staff see current alert zone, response counts, next evaluation and exhausted handoff; policy administration respects organizational scope and donor privacy.",
+        "Socket.IO room subscriptions and emissions require active session, staff MFA and hospital/NSS assignment; revocation disconnects clients and reconnect refetches REST state without duplicate transitions.",
+        "Zustand holds UI state only, Recharts reports remain scoped, and REST dashboard/inbox flows work during a socket outage.",
+        "Dashboard supports scoped click-to-call/contact attempts, reserved/confirmed/waiting counts, offer deadlines, failed-visit replacement, approved checklist editing and private uploaded-proof review.",
+        "Admin panel receives submitted questionnaire answers/details, opens phone dialler for validation and supports guarded donors-ready notices, certificate review and automatic verified-unit closure."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F028",
+      "order": 28,
+      "stage": "clients",
+      "title": "Flutter Android and iOS app",
+      "dependsOn": [
+        "F006",
+        "F009",
+        "F011",
+        "F014",
+        "F018",
+        "F020",
+        "F022",
+        "F024",
+        "F017"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Flutter/Dart app with Riverpod, Dio, GoRouter, secure storage and Firebase Messaging supports registration/sign-in, profile, discovery, requests, pledges, travel, inbox and history.",
+        "Real-device journeys pass with denied location/push; no sample donation appears as real.",
+        "Tamil/English donor registration/activation, resume, manual locality, consent and denied push journeys use real server validation; wider-search/exhaustion milestones reveal no donor data.",
+        "Pinned Flutter/Dart builds pass analysis, unit/widget/integration tests and selected Maestro device flows; generated Dart API models and Tamil/English ARB copy match shared contracts.",
+        "Real-device journeys cover foreground accept/reject, background taps, waiting/replacement reconfirmation, checkbox questionnaire with private admin-visible responses, click-to-call and compressed proof upload with interrupted-network recovery."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F029",
+      "order": 29,
+      "stage": "clients",
+      "title": "Tamil and English completion",
+      "dependsOn": [
+        "F025",
+        "F026",
+        "F027",
+        "F028"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Core UI, errors, email, notifications, instructions, and help are translated and reviewed.",
+        "Native speakers review check/deferral copy and language switching preserves state.",
+        "Flutter localization/ARB and web/backend i18next preserve matching keys, placeholders, Tamil/English copy and notification meaning through automated parity checks."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F030",
+      "order": 30,
+      "stage": "governance",
+      "title": "Privacy requests and retention",
+      "dependsOn": [
+        "F004",
+        "F006",
+        "F007"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Export/deletion, consent history, cleanup, backups, and approved legal holds follow a field-level schedule.",
+        "Withdrawal stops future contact; private exports and deletion are scoped and tested.",
+        "Field/object retention covers proof uploads and orphan cleanup; consent withdrawal suppresses queued promotion/contact. Questionnaire responses are private in storage/personal export and absent from public/shared export or telemetry.",
+        "Consent-withdrawal tests cover waiting/offered/confirmed/en-route/arrived pledges, immediate number-access removal and preserved attendance/evidence reconciliation; manual handoff never extends consent.",
+        "Private preliminary questionnaire response consent, withdrawal/access revocation, donor-only personal export, retention/deletion and audit are implemented without public/staff-bulk disclosure."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F031",
+      "order": 31,
+      "stage": "governance",
+      "title": "Abuse and support workflows",
+      "dependsOn": [
+        "F012",
+        "F027"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Fake/duplicate request reporting, support queue, and grievance route are auditable.",
+        "Tamil/English emergency guidance and support contacts are visible."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F032",
+      "order": 32,
+      "stage": "quality",
+      "title": "Security verification",
+      "dependsOn": [
+        "F005",
+        "F006",
+        "F007",
+        "F019",
+        "F021",
+        "F030",
+        "F031",
+        "F022"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "ASVS-aligned tests cover RLS, MFA, CSRF, XSS, rate limits, secret exposure, and false confirmation.",
+        "No unresolved critical or high exploitable issue remains for pilot release.",
+        "Custom JWT/session replay, provider linking, trusted SQL actor context and Socket.IO room/revocation tests preserve the former authorization/privacy gates.",
+        "Upload authorization/content spoofing, private downloads, questionnaire version management, answer leakage and concurrent capacity/promotion tests pass with no self-verification."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F033",
+      "order": 33,
+      "stage": "quality",
+      "title": "Accessibility and responsive QA",
+      "dependsOn": [
+        "F025",
+        "F026",
+        "F027",
+        "F028",
+        "F029"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Keyboard, TalkBack, VoiceOver, contrast, large text, reduced motion, and 320-pixel layouts are tested.",
+        "Donor, requester, staff, and Tamil journeys have no blocking accessibility defect."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F034",
+      "order": 34,
+      "stage": "quality",
+      "title": "Resilience and performance QA",
+      "dependsOn": [
+        "F023",
+        "F026",
+        "F027",
+        "F028"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Slow/offline networks, concurrency, queue backlog, and measured pilot load are exercised.",
+        "Plan performance targets are measured and no unconfirmed mutation reports success.",
+        "Node worker restarts, socket disconnect/reconnect and database connection limits are tested; HTTP data remains authoritative during real-time delivery failures.",
+        "Concurrent two-slot acceptance, double promotion, contact/offer expiry, emergency escalation, outage recovery and delayed proof never overbook or falsely fulfill requests."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F035",
+      "order": 35,
+      "stage": "quality",
+      "title": "Monitoring and operational runbooks",
+      "dependsOn": [
+        "F007",
+        "F023"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Redacted logs, Sentry, uptime/queue/quota alerts, and incident procedures are live.",
+        "Operators rehearse outage, push failure, abuse, credential incident, bad release, and rollback."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F036",
+      "order": 36,
+      "stage": "quality",
+      "title": "Backup and restore",
+      "dependsOn": [
+        "F003",
+        "F004",
+        "F022"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Encrypted R2 backups cover business data, backend identity/session data, Prisma migration history, SQL policies and configuration; restoration invalidates pre-restore sessions and preserves scoped access.",
+        "Restore succeeds before real enrollment and meets approved recovery targets.",
+        "Restoration covers required retained private proof objects and metadata, with reconciliation and scoped access; orphan cleanup and retention do not silently destroy verified evidence."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F037",
+      "order": 37,
+      "stage": "quality",
+      "title": "CI, staging, and deployment",
+      "dependsOn": [
+        "F002",
+        "F025",
+        "F026",
+        "F027",
+        "F028",
+        "F035",
+        "F036"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Clean-checkout CI runs migrations, tests, scans, staging, deployment, and rollback.",
+        "Production and staging credentials/data are separate; release needs no undocumented steps.",
+        "CI separately checks Node/web and Flutter SDK/pub builds; Prisma migration deployment, Express/worker hosting on Railway/Render, Next.js on Vercel and managed PostGIS PostgreSQL have staging and rollback evidence."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F038",
+      "order": 38,
+      "stage": "quality",
+      "title": "Mobile release and provider setup",
+      "dependsOn": [
+        "F024",
+        "F028",
+        "F037"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Production Firebase/APNs, SMTP, domains, signing, identifiers, and declarations are configured.",
+        "Real-device push/deep links pass and privacy declarations match actual collection.",
+        "Signed Flutter Android/iOS releases use non-secret API_URL configuration, native Firebase Messaging/APNs setup, supported deep links and platform-specific store/signing checks."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F039",
+      "order": 39,
+      "stage": "pilot",
+      "title": "Partner approval and training",
+      "dependsOn": [
+        "F013",
+        "F019",
+        "F021",
+        "F027",
+        "F030"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Hospitals/NSS sign off checklist, evidence, staffed hours, escalation, support, and backup contacts.",
+        "Both partner roles rehearse proceed, uncertainty, deferral, donation, outage, and dispute.",
+        "Partners approve versioned urgency response/contact/offer windows, slot targets, enabled coverage, immediate emergency broadcasts, checklist versions and upload retention; rehearse all-coverage exhaustion, waiting replacements, pending proof and coordinated-versus-fulfilled messaging.",
+        "Partners supply positive bounded policy values before publication; synthetic test policies are labelled and cannot silently become production defaults."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F040",
+      "order": 40,
+      "stage": "pilot",
+      "title": "Controlled pilot launch",
+      "dependsOn": [
+        "F032",
+        "F033",
+        "F034",
+        "F035",
+        "F036",
+        "F037",
+        "F038",
+        "F039"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Invite agreed cohort and run supervised operations with quota and safety controls.",
+        "Real-data end-to-end journeys work and enrollment pauses when signed limits fail."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F041",
+      "order": 41,
+      "stage": "pilot",
+      "title": "Pilot evaluation and corrections",
+      "dependsOn": [
+        "F040"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Review response times, outcomes, no-shows, complaints, alerts, privacy, cost, and usability.",
+        "Observed defects are fixed/retested and partners sign expansion go/no-go."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F042",
+      "order": 42,
+      "stage": "expansion",
+      "title": "Funded reliability and capacity",
+      "dependsOn": [
+        "F041"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Upgrade database, backups, monitoring, and infrastructure from pilot measurements.",
+        "Load, restore, cost, alerts, and rollback evidence support larger cohort."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F043",
+      "order": 43,
+      "stage": "expansion",
+      "title": "Phone identity and SMS",
+      "dependsOn": [
+        "F006",
+        "F041"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Funded OTP/SMS preserves accounts through identity linking and respects consent.",
+        "Sender/templates, rate limits, failures, and costs pass tests.",
+        "Phone OTP/SMS integrates through the Express identity-provider adapter and preserves backend account/session ownership; Supabase Auth is not required."
+      ],
+      "evidence": [],
+      "tags": [
+        "parallel"
+      ]
+    },
+    {
+      "id": "F044",
+      "order": 44,
+      "stage": "expansion",
+      "title": "Tamil Nadu district rollout",
+      "dependsOn": [
+        "F039",
+        "F042",
+        "F043"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "Onboard additional verified partners and districts through configuration and training.",
+        "Every district has ownership, hospital evidence policy, support, access tests, and monitoring."
+      ],
+      "evidence": [],
+      "tags": []
+    },
+    {
+      "id": "F045",
+      "order": 45,
+      "stage": "completion",
+      "title": "Final release and handoff",
+      "dependsOn": [
+        "F044"
+      ],
+      "status": "not_started",
+      "acceptanceCriteria": [
+        "All planned features and release gates have evidence and named owners.",
+        "Technical/partner owners accept runbooks, restore proof, and ongoing review cadence."
+      ],
+      "evidence": [],
+      "tags": []
+    }
+  ]
+}

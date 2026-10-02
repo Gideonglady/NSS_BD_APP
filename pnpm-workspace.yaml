@@ -1,0 +1,9 @@
+packages:
+  - backend
+  - admin
+  - packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - prisma
+  - '@prisma/engines'
